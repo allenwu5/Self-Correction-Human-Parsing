@@ -143,9 +143,10 @@ def main():
             logits_result = transform_logits(upsample_output.data.cpu().numpy(), c, s, w, h, input_size=input_size)
             parsing_result = np.argmax(logits_result, axis=2)
             
-            # output_img = Image.fromarray(np.asarray(parsing_result, dtype=np.uint8))
-            # output_img.putpalette(palette)
-
+            output_img = Image.fromarray(np.asarray(parsing_result, dtype=np.uint8))
+            output_img.putpalette(palette)
+            png_path = os.path.join(args.output_dir, img_name[:-4] + '.png')
+            output_img.save(png_path)
             # 'lip': {
             #     'input_size': [473, 473],
             #     'num_classes': 20,
@@ -161,9 +162,6 @@ def main():
             org_img = Image.open(img_path)
             f = Image.fromarray(np.asarray(parsing_result, dtype=np.uint8))
             org_img.putalpha(f)
-            png_path = os.path.join(args.output_dir, img_name[:-4] + '.png')
-            org_img.save(png_path)
-
             org_img = np.array(org_img)
 
             # https://stackoverflow.com/a/55973647/1513627
