@@ -3,3 +3,8 @@
 data/
 log/
 pretrain_model/
+
+.vscode
+
+*.png
+*.jpg

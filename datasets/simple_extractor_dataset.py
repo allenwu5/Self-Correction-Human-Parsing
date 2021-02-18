@@ -27,7 +27,8 @@ class SimpleFolderDataset(data.Dataset):
         self.aspect_ratio = input_size[1] * 1.0 / input_size[0]
         self.input_size = np.asarray(input_size)
 
-        self.file_list = os.listdir(self.root)
+        self.file_list = [f for f in os.listdir(
+            self.root) if '.ipynb_checkpoints' not in f]
 
     def __len__(self):
         return len(self.file_list)
@@ -68,6 +69,7 @@ class SimpleFolderDataset(data.Dataset):
         input = self.transform(input)
         meta = {
             'name': img_name,
+            'img_path': img_path,
             'center': person_center,
             'height': h,
             'width': w,

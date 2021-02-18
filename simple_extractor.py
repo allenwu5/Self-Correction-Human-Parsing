@@ -128,6 +128,7 @@ def main():
         for idx, batch in enumerate(tqdm(dataloader)):
             image, meta = batch
             img_name = meta['name'][0]
+            img_path = meta['img_path'][0]
             c = meta['center'].numpy()[0]
             s = meta['scale'].numpy()[0]
             w = meta['width'].numpy()[0]
@@ -141,10 +142,36 @@ def main():
 
             logits_result = transform_logits(upsample_output.data.cpu().numpy(), c, s, w, h, input_size=input_size)
             parsing_result = np.argmax(logits_result, axis=2)
-            parsing_result_path = os.path.join(args.output_dir, img_name[:-4] + '.png')
-            output_img = Image.fromarray(np.asarray(parsing_result, dtype=np.uint8))
-            output_img.putpalette(palette)
-            output_img.save(parsing_result_path)
+            
+            # output_img = Image.fromarray(np.asarray(parsing_result, dtype=np.uint8))
+            # output_img.putpalette(palette)
+
+            # 'lip': {
+            #     'input_size': [473, 473],
+            #     'num_classes': 20,
+            #     'label': ['Background', 'Hat', 'Hair', 'Glove', 'Sunglasses', 'Upper-clothes', 'Dress', 'Coat',
+            #               'Socks', 'Pants', 'Jumpsuits', 'Scarf', 'Skirt', 'Face', 'Left-arm', 'Right-arm',
+            #               'Left-leg', 'Right-leg', 'Left-shoe', 'Right-shoe']
+            # },
+
+            parsing_result = (parsing_result >= 5) & (parsing_result != 13)
+            parsing_result = parsing_result.astype(int)
+            parsing_result = parsing_result * 255
+
+            org_img = Image.open(img_path)
+            f = Image.fromarray(np.asarray(parsing_result, dtype=np.uint8))
+            org_img.putalpha(f)
+            png_path = os.path.join(args.output_dir, img_name[:-4] + '.png')
+            org_img.save(png_path)
+
+            org_img = np.array(org_img)
+
+            # https://stackoverflow.com/a/55973647/1513627
+            # Alpha -> Green
+            org_img[org_img[...,-1]==0] = [0,255,0,0]
+            jpg_path = os.path.join(args.output_dir, img_name[:-4] + '.jpg')
+            Image.fromarray(org_img).convert('RGB').save(jpg_path)
+
             if args.logits:
                 logits_result_path = os.path.join(args.output_dir, img_name[:-4] + '.npy')
                 np.save(logits_result_path, logits_result)
